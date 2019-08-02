@@ -1,0 +1,70 @@
+scale: 1
+metatile: 2
+name: CartoMinimal
+description: A  minimalistic OpenStreetMap mapnik style, cereated for learning purposes
+bounds: &world
+  - 6461069.126889
+  - 1619242.007193
+  - 6758256.292862
+  - 1993477.697677
+center:
+  - 6629345.244659
+  - 1885166.428597
+  - 16
+format: png
+srs: "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over"
+
+_parts:
+  extents: &extents
+    extent: *world
+    srs-name: "3857"
+    srs: "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over"
+  
+  osm2pgsql: &osm2pgsql
+    type: "postgis"
+    dbname: "gis"
+    host: "localhost"
+    user: "user"
+    password: "password"
+    port: "5432"
+
+Stylesheet:
+  - stylesheets/railways.mss
+  - stylesheets/highways.mss
+
+Layer:
+  - <<: *extents
+    name: roads
+    id:   roads
+    class: roads
+    properties:
+      cache-features: on
+    Datasource:
+      <<: *osm2pgsql
+      geometry_field: "way"
+      table: >
+        (
+          SELECT highway, name, way
+          FROM planet_osm_line
+          WHERE (highway IN ('motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link', 'secondary', 'secondary_link'))
+        ) AS roads
+  - <<: *extents
+    name: railways
+    id:   railways
+    class: railways
+    properties:
+      cache-features: on
+    Datasource:
+      <<: *osm2pgsql
+      geometry_field: "way"
+      table: >
+        (
+            SELECT railway, name, way,
+            (CASE 
+                WHEN railway IN ('rail') THEN 'used'
+                WHEN railway IN ('abandoned', 'disused') THEN 'disused'
+                ELSE '' END
+            ) AS kind
+            FROM planet_osm_line
+            WHERE railway IS NOT NULL
+        ) AS railways

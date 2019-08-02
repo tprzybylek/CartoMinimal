@@ -1,0 +1,4 @@
+.vscode/
+*.osm
+*.pbf
+*.xml
