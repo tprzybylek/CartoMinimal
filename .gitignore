@@ -2,3 +2,7 @@
 *.osm
 *.pbf
 *.xml
+
+/data
+/output
+/posters
